@@ -1,6 +1,9 @@
 # PRD Template
 
-Use this template to capture the high-level intent, boundaries, and guiding decisions for a hobby-scale Python project. It is meant to orient contributors and frame future Feature Specs without locking in implementation detail too early.
+Use this template to capture the high-level intent, boundaries, and guiding decisions
+for a hobby-scale Python project.
+It is meant to orient contributors and frame future Feature Specs without locking in
+implementation detail too early.
 
 ## 1. Project Overview
 
