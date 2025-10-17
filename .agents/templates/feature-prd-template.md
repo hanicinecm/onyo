@@ -1,9 +1,9 @@
-# Feature Spec Template
+# Feature PRD Template
 
 Use this template to describe the intent, scope, and delivery path for a single
 feature or milestone.
-It should connect the project PRD to specific implementation work while keeping enough
-context for future contributors to understand the why, what, and how.
+It should connect the *Project PRD* to specific implementation work while keeping
+enough context for future contributors to understand the why, what, and how.
 Apply only the sections that fit the nature of the feature or milestone you are
 documenting.
 
