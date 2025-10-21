@@ -22,7 +22,8 @@ The AI assistant creates the task list as follows:
 
 - **Format**: Markdown (`.md`)
 - **Location**: `tasks/`
-- **Filename**: `tasklist-[feature-name].md` (e.g., `tasks/tasklist-data-model.md`)
+- **Filename**: `[n]-tasklist-[feature-name].md`, where `n` is a zero-padded 3-digit
+  sequence starting from 001 (e.g., `tasks/001-tasklist-data-model.md`)
 
 ### Output Structure
 
@@ -45,12 +46,12 @@ part of any PRD or other instructions for AI agents.
 
 ## Tasks
 
-- [ ] 1.0 Parent Task Title
+- [ ] 1 Parent Task Title
   - [ ] 1.1 [Sub-task description 1.1]
   - [ ] 1.2 [Sub-task description 1.2]
-- [ ] 2.0 Parent Task Title
+- [ ] 2 Parent Task Title
   - [ ] 2.1 [Sub-task description 2.1]
-- [ ] 3.0 Parent Task Title (may not require sub-tasks if simple enough)
+- [ ] 3 Parent Task Title (may not require sub-tasks if simple enough)
 
 ```
 
