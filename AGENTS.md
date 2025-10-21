@@ -20,10 +20,10 @@
 3. If the tooling or tech is unspecified, ask and propose the best options.
 4. Outline a plan when the work is non-trivial (skip only for simple edits).
 5. Make focused changes; prefer small, composable functions and clear comments.
-6. Format and lint the code after every change to any python file.
-7. Add new tests when the code changes.
-8. Execute targeted tests whenever you change any python code or test data.
-9. Summarize what changed, call out follow-ups, and reference touched paths.
+6. Format and lint the code after every change to any python file with
+   `uvx ruff check --fix && uvx ruff format`.
+7. Add new tests, when applicable, and run them.
+8. Summarize what changed, call out follow-ups, and reference touched paths.
 
 ## Project Layout
 
@@ -89,8 +89,11 @@ def resources_dir() -> Path:
 
 - Never discard user changes; if conflicts arise, ask before rewriting.
 - Never commit unless asked for.
-- Commit messages: `<type>(<scope>): <description>`.
+- Use the conventional commit format: `<type>(<scope>): <description>`.
   - If the change closed a numbered task, reference the task in the description.
   - Types are `feat`, `fix`, `test`, `refactor`, `docs`, `chore`.
   - Example: `feat(cli): implement cli, close task 3.14`.
+- Branches:
+  - The `main` branch (or `master`) should never be touched by agents.
+  - The development happens on the `dev` branch, and/or on feature branches.
 - Document residual risks or required manual checks in your summary.
