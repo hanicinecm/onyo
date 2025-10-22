@@ -16,12 +16,11 @@
 
 1. Clarify the task and check repo context before editing.
    Restate goals, surface assumptions, and note constraints.
-2. Use `rg`, `ls`, or `git status` to gather the minimal context you need.
+2. Gather the minimal context you need.
 3. If the tooling or tech is unspecified, ask and propose the best options.
 4. Outline a plan when the work is non-trivial (skip only for simple edits).
 5. Make focused changes; prefer small, composable functions and clear comments.
-6. Format and lint the code after every change to any python file with
-   `uvx ruff check --fix && uvx ruff format`.
+6. Format and lint the code after every change to any python file with `ruff`.
 7. Add new tests, when applicable, and run them.
 8. Summarize what changed, call out follow-ups, and reference touched paths.
 
@@ -35,18 +34,20 @@
   and is always kept git-ignored.
 - Top-level configs: `pyproject.toml`, `.gitignore`, `AGENTS.md`, etc.
   The `pyproject.toml` is compatible with `uv`.
+- The Python environment lives in the `.venv/` directory and it is maintained by `uv`.
 
 ## Toolbelt
 
-- Format: `uvx ruff format .`
-- Lint: `uvx ruff check .` (append `--fix` for safe autofixes)
-- Tests: `uv run pytest` or target cases like
-  `uv run pytest tests/onyo/test_foo.py::test_bar`
+- Format and Lint: `ruff check --fix && ruff format`
+- Tests: `pytest` or target cases like
+  `pytest tests/onyo/test_foo.py::test_bar`
 - Dependencies: `uv add <pkg>`; dev-only deps use `uv add --dev <pkg>`
 
-Always run commands from the repo root. Any command that relies on the virtual
-environment needs the `uv run` prefix.
-Keep the repository formatted, linted, and with all tests passing.
+Always run commands from the repo root.
+For any command that relies on the virtual environment, this needs to be activated by
+`source .venv/bin/activate`.
+Always run `ruff` on the whole codebase, never lint or format the individual files.
+Keep the repository formatted, linted, and all tests passing.
 
 ## Coding Style and Standards
 
@@ -62,7 +63,7 @@ Keep the repository formatted, linted, and with all tests passing.
   obvious.
 - Always prefer `pathlib` over `os`.
 - Avoid relative imports.
-- Format and lint with `uvx ruff`.
+- Format and lint with `ruff`.
 
 ## Testing Discipline
 
@@ -70,6 +71,8 @@ Keep the repository formatted, linted, and with all tests passing.
 - Always prefer test functions over test classes.
 - Prefer pytest fixtures and organize shared fixtures in `conftest.py` modules.
 - Parametrize tests where it improves coverage.
+- When asserting errors, use the `match` parameter of the `pytest.raises` context
+  manager.
 - Structure tests Arrange → Act → Assert and cover edge cases and regressions.
 - Keep coverage high on code you touch; add tests when behavior shifts, unless
   instructed otherwise.

@@ -39,8 +39,9 @@ concrete PRD documents.
    clarifying questions, the assistant generates a PRD using the structure outlined in
    the relevant template.
 4. **Save the PRD**: The project-level PRD is saved as `PRD.md` in the project root,
-   while a feature-level PRD is saved as `prd-[feature-name].md` inside the `tasks/`
-   directory (e.g., `tasks/prd-data-model.md`).
+   while a feature-level PRD is saved as `[n]-prd-[feature-name].md` inside the `tasks/`
+   directory, where `n` is a zero-padded 3-digit sequence starting from 001
+   (e.g., `tasks/001-prd-data-model.md`).
    Create the `tasks/` directory in the root folder, if it does not exist.
 5. **Ensure Consistency**: If the newly-created *Feature PRD* conflicts with
    the *Project PRD*, consistency must be restored by updating the project-level
