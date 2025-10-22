@@ -24,7 +24,11 @@ class MissingConfigurationError(ConfigurationError):
     """Raised when one or more required configuration values are absent."""
 
     def __init__(self, fields: Iterable[str]) -> None:
-        """Initialise the error with the missing configuration field names."""
+        """Initialise the error with the missing configuration field names.
+
+        Args:
+            fields: Names of configuration fields that are absent.
+        """
         names = tuple(sorted(str(field) for field in fields))
         message = ", ".join(names)
         super().__init__(f"Missing required configuration fields: {message}")
@@ -35,7 +39,12 @@ class PlaceholderConfigurationError(ConfigurationError):
     """Raised when a required field still contains the placeholder value."""
 
     def __init__(self, field: str, config_path_hint: str) -> None:
-        """Initialise the error with the offending field and where to fix it."""
+        """Initialise the error with the offending field and where to fix it.
+
+        Args:
+            field: Name of the configuration field that contains the placeholder.
+            config_path_hint: Human-readable hint directing the user to the config file.
+        """
         base = f"Configuration field '{field}' still contains the placeholder value."
         guidance = f" Update {config_path_hint} with a valid value."
         super().__init__(base + guidance)
@@ -47,10 +56,32 @@ class InvalidConfigurationError(ConfigurationError):
     """Raised when a configuration value cannot be coerced to the expected type."""
 
     def __init__(self, field: str, reason: str) -> None:
-        """Initialise the error with the field name and the failure reason."""
+        """Initialise the error with the field name and the failure reason.
+
+        Args:
+            field: Name of the configuration field with the invalid value.
+            reason: Description of why the value is invalid.
+        """
         super().__init__(f"Invalid value for configuration field '{field}': {reason}")
         self.field = field
         self.reason = reason
+
+
+class ConfigurationFileMissingError(ConfigurationError):
+    """Raised when the configuration file is absent and a template was generated."""
+
+    def __init__(self, path: Path) -> None:
+        """Initialise the error with the path to the missing configuration file.
+
+        Args:
+            path: Filesystem location where the configuration file is expected.
+        """
+        message = (
+            f"No configuration file found at {path}. A template was created; update it "
+            "with valid values before retrying."
+        )
+        super().__init__(message)
+        self.path = path
 
 
 @dataclass(slots=True)
@@ -96,12 +127,20 @@ class Configuration:
 
     @classmethod
     def defaults(cls) -> dict[str, Any]:
-        """Return a shallow copy of default configuration values."""
+        """Return a shallow copy of default configuration values.
+
+        Returns:
+            dict[str, Any]: Copy of the default configuration values.
+        """
         return dict(cls._DEFAULTS)
 
     @classmethod
     def required_fields(cls) -> set[str]:
-        """Return the set of required configuration field names."""
+        """Return the set of required configuration field names.
+
+        Returns:
+            set[str]: Required configuration field names.
+        """
         return set(cls._REQUIRED_FIELDS)
 
     @classmethod
@@ -126,24 +165,45 @@ class Configuration:
         return cls(recipe_repo_path=recipe_repo_path)
 
     def to_mapping(self) -> dict[str, Any]:
-        """Serialise the configuration to a mapping compatible with YAML dumps."""
+        """Serialise the configuration to a mapping compatible with YAML dumps.
+
+        Returns:
+            dict[str, Any]: Mapping representation of the configuration.
+        """
         return {"recipe_repo_path": str(self.recipe_repo_path)}
 
     @classmethod
     def _validate_required_fields(cls, values: Mapping[str, Any]) -> None:
-        """Ensure all required fields are present after defaults are applied."""
+        """Ensure all required fields are present after defaults are applied.
+
+        Args:
+            values: Mapping containing configuration field values.
+
+        Raises:
+            MissingConfigurationError: Raised when any required field is absent.
+        """
         missing = {name for name in cls.required_fields() if name not in values}
         if missing:
             raise MissingConfigurationError(missing)
 
     @classmethod
     def placeholders(cls) -> dict[str, str]:
-        """Return a shallow copy of placeholder values keyed by field name."""
+        """Return a shallow copy of placeholder values keyed by field name.
+
+        Returns:
+            dict[str, str]: Mapping of field name to placeholder value.
+        """
         return dict(cls._PLACEHOLDERS)
 
     @classmethod
     def _coerce_recipe_repo_path(cls, raw_value: object) -> Path:
         """Convert and validate the recipe repository path value.
+
+        Args:
+            raw_value: Raw configuration value to convert to a ``Path`` instance.
+
+        Returns:
+            Path: Expanded filesystem path for the recipe repository.
 
         Raises:
             MissingConfigurationError: Raised when the field is blank or absent.
