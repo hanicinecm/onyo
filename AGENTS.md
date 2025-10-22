@@ -16,7 +16,7 @@
 
 1. Clarify the task and check repo context before editing.
    Restate goals, surface assumptions, and note constraints.
-2. Use `rg`, `ls`, or `git status` to gather the minimal context you need.
+2. Gather the minimal context you need.
 3. If the tooling or tech is unspecified, ask and propose the best options.
 4. Outline a plan when the work is non-trivial (skip only for simple edits).
 5. Make focused changes; prefer small, composable functions and clear comments.
@@ -71,6 +71,8 @@ Keep the repository formatted, linted, and all tests passing.
 - Always prefer test functions over test classes.
 - Prefer pytest fixtures and organize shared fixtures in `conftest.py` modules.
 - Parametrize tests where it improves coverage.
+- When asserting errors, use the `match` parameter of the `pytest.raises` context
+  manager.
 - Structure tests Arrange → Act → Assert and cover edge cases and regressions.
 - Keep coverage high on code you touch; add tests when behavior shifts, unless
   instructed otherwise.

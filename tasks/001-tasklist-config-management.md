@@ -24,7 +24,7 @@
   - [x] 3.1 Implement `get_config()` in `src/onyo/config/__init__.py` to cache and return the current configuration instance.
   - [x] 3.2 Add a `reload_config()` (or similar) function that clears caches and re-runs the loader pipeline on demand.
   - [x] 3.3 Ensure configuration functions integrate cleanly with future UI/CLI refresh triggers (document usage in docstrings).
-- [ ] 4 Cover configuration logic with automated tests and developer documentation updates.
-  - [ ] 4.1 Write unit tests for the `Configuration` model (`tests/test_config_models.py`) covering type casting, default application, and validation failures.
-  - [ ] 4.2 Write integration tests for the loader (`tests/test_config_loader.py`) covering missing-file creation, successful load, reload behavior, and error reporting.
-  - [ ] 4.3 Update `README.md` (or dedicated docs) with steps to locate/edit the config file, including guidance on handling placeholder values and errors.
+- [x] 4 Cover configuration logic with automated tests and developer documentation updates.
+  - [x] 4.1 Write unit tests for the `Configuration` model (`tests/test_config_models.py`) covering type casting, default application, and validation failures.
+  - [x] 4.2 Write integration tests for the loader (`tests/test_config_loader.py`) covering missing-file creation, successful load, reload behavior, and error reporting.
+  - [x] 4.3 Update `README.md` (or dedicated docs) with steps to locate/edit the config file, including guidance on handling placeholder values and errors.
