@@ -57,6 +57,23 @@ class InvalidConfigurationError(ConfigurationError):
 class Configuration:
     """Strongly typed configuration values used by the onyo application.
 
+    The class encapsulates the validated configuration surface that other parts of the
+    system consume. Configuration data flows through the following stages:
+
+    * `_PLACEHOLDERS` stores template values keyed by field name. Those placeholders
+      are written into an auto-generated YAML file to highlight required inputs that
+      the user must replace.
+    * `_DEFAULTS` provides the baseline values merged with user-supplied data before
+      validation. Defaults may reference placeholders (for required fields) or concrete
+      runtime defaults (for optional settings in the future).
+    * `_REQUIRED_FIELDS` enumerates the keys that must be present after defaults and
+      overrides have been merged.
+    * `from_mapping()` applies defaults, merges the incoming mapping, and performs the
+      validation steps. Missing keys raise :class:`MissingConfigurationError`, fields
+      that still contain placeholder values raise
+      :class:`PlaceholderConfigurationError`, and values that cannot be coerced to the
+      expected type raise :class:`InvalidConfigurationError`.
+
     Attributes:
         recipe_repo_path: Filesystem location of the external recipe repository. This
             value is required and must resolve to a valid directory on disk.
@@ -64,13 +81,15 @@ class Configuration:
 
     recipe_repo_path: Path
 
-    # Placeholder written to the generated config file for required path values.
-    PLACEHOLDER_RECIPE_REPO_PATH: ClassVar[str] = "<SET PATH TO RECIPES>"
+    # Placeholder values written to generated config files for required fields.
+    _PLACEHOLDERS: ClassVar[dict[str, str]] = {
+        "recipe_repo_path": "<SET PATH TO RECIPES>",
+    }
     # Path hint surfaced in placeholder-related validation errors.
     CONFIG_PATH_HINT: ClassVar[str] = "~/.config/onyo/onyo-config.yaml"
     # Default values applied prior to overlaying user-provided configuration.
     _DEFAULTS: ClassVar[dict[str, Any]] = {
-        "recipe_repo_path": PLACEHOLDER_RECIPE_REPO_PATH,
+        "recipe_repo_path": _PLACEHOLDERS["recipe_repo_path"],
     }
     # Fields that must be present after defaults are merged with user overrides.
     _REQUIRED_FIELDS: ClassVar[set[str]] = {"recipe_repo_path"}
@@ -118,6 +137,11 @@ class Configuration:
             raise MissingConfigurationError(missing)
 
     @classmethod
+    def placeholders(cls) -> dict[str, str]:
+        """Return a shallow copy of placeholder values keyed by field name."""
+        return dict(cls._PLACEHOLDERS)
+
+    @classmethod
     def _coerce_recipe_repo_path(cls, raw_value: object) -> Path:
         """Convert and validate the recipe repository path value.
 
@@ -135,7 +159,8 @@ class Configuration:
             stripped = raw_value.strip()
             if stripped == "":
                 raise MissingConfigurationError({"recipe_repo_path"})
-            if stripped == cls.PLACEHOLDER_RECIPE_REPO_PATH:
+            placeholder = cls._PLACEHOLDERS["recipe_repo_path"]
+            if stripped == placeholder:
                 field_name = "recipe_repo_path"
                 raise PlaceholderConfigurationError(field_name, cls.CONFIG_PATH_HINT)
             return Path(stripped).expanduser()
