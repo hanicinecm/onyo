@@ -134,9 +134,10 @@ Acceptance criteria:
 - **Validation pipeline**:
   1. Walk `ingredients/`, parse YAML into dictionaries, instantiate models, and capture model-creation errors while recording the category from file headers or filename fallback.
   2. Walk `recipes/`, instantiate models, ensure ingredient names resolve to catalog entries or create ephemeral placeholders, and attach any instantiation errors to the report.
-  3. Collect all model and relationship validation errors in a `ValidationReport` containing items (level, file, field, message).
-  4. Build reverse indices: ingredient name → recipes referencing it, recipe name → file path.
-  5. If fatal errors exist, retain prior `CorpusSnapshot` and surface report; otherwise replace active snapshot.
+  3. If a recipe references and ingredient which has nutrition info, it needs to use the same unit as the recipe, otherwise the nutritions will be scrapped from the ingredient and error will be logged.
+  4. Collect all model and relationship validation errors in a `ValidationReport` containing items (level, file, field, message).
+  5. Build reverse indices: ingredient name → recipes referencing it, recipe name → file path.
+  6. If fatal errors exist, retain prior `CorpusSnapshot` and surface report; otherwise replace active snapshot.
 - **Integration points**:
   - Expose a `DataStore` or dependency-injected service that provides read-only access to the current snapshot for UI and search layers.
   - Emit events or signals when new snapshots are activated so observers can refresh state.
