@@ -19,10 +19,10 @@
   - [x] 1.2 Add a `tests/data/conftest.py` fixture that copies the sample corpus into a temporary directory to support mutation-free tests.
   - [x] 1.3 Document fixture usage patterns within `tests/data/conftest.py` to guide future contributors.
 - [ ] 2 Implement domain models alongside focused unit tests.
-  - [ ] 2.1 Introduce `src/onyo/data/models.py` with frozen dataclasses (or Pydantic models) for `Recipe`, `RecipeIngredient`, `Ingredient`, `NutritionProfile`, and `CorpusSnapshot`.
-  - [ ] 2.2 Add `Recipe` invariants: enforce unique recipe names, immutable ingredient tuples, and reference tracking for ingredient usage.
-  - [ ] 2.3 Add `Ingredient` invariants: enforce unique ingredient names, optional category from YAML, reverse recipe references, and metadata handling.
-  - [ ] 2.4 Write unit tests in `tests/data/test_models.py` verifying model construction, optional fields, error handling on duplicates, and immutability guarantees.
+  - [x] 2.1 Introduce `src/onyo/data/models.py` with frozen dataclasses (or Pydantic models) for `Recipe`, `RecipeIngredient`, `Ingredient`, `NutritionProfile`, and `CorpusSnapshot`.
+  - [x] 2.2 Add `Recipe` invariants: enforce unique recipe names, immutable ingredient tuples, and reference tracking for ingredient usage.
+  - [x] 2.3 Add `Ingredient` invariants: enforce unique ingredient names, optional category from YAML, reverse recipe references, and metadata handling.
+  - [x] 2.4 Write unit tests in `tests/data/test_models.py` verifying model construction, optional fields, error handling on duplicates, and immutability guarantees.
 - [ ] 3 Build name-handling and validation-report utilities with corresponding tests.
   - [ ] 3.1 Implement `src/onyo/data/naming.py` helpers to normalize names, detect duplicates case-insensitively, and produce slug diagnostics for logs.
   - [ ] 3.2 Implement `src/onyo/data/errors.py` with domain exceptions and a `ValidationReport` structure that aggregates per-file issues.

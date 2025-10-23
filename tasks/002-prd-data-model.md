@@ -68,8 +68,8 @@ Acceptance criteria:
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `ingredient` | `Ingredient` | Yes | Always populated; loader creates ephemeral `Ingredient` when no catalog entry exists. |
-| `quantity` | `Decimal` | Yes | Numeric amount stored as high-precision decimal. |
-| `unit` | `QuantityUnit` | Yes | Enum covering supported units (`g`, `kg`, `ml`, `l`, `tbsp`, `tsp`, `cup`, `piece`). |
+| `quantity` | `float` | Yes | Numeric amount stored as a floating-point value. |
+| `unit` | `QuantityUnit` | Yes | Enum covering supported units (`g`, `kg`, `ml`, `l`, `tbsp`, `tsp`, `piece`). |
 | `substitutes` | `tuple[Ingredient, ...]` | No | Optional ordered substitutes, each resolved to catalog or ephemeral entries. |
 
 #### Ingredient
@@ -88,11 +88,11 @@ Acceptance criteria:
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `unit` | `QuantityUnit` | Yes | Base unit for macro values (e.g., `g`). |
-| `per_amount` | `Decimal` | Yes | Amount associated with macro values (e.g., per 100g). |
-| `sugars` | `Decimal` | No | Sugar grams per `per_amount`; optional. |
-| `protein` | `Decimal` | No | Protein grams per `per_amount`; optional. |
-| `saturated_fat` | `Decimal` | No | Saturated fat grams; optional. |
-| `unsaturated_fat` | `Decimal` | No | Unsaturated fat grams; optional. |
+| `per_amount` | `float` | Yes | Amount associated with macro values (e.g., per 100g). |
+| `sugars` | `float` | No | Sugar grams per `per_amount`; optional. |
+| `protein` | `float` | No | Protein grams per `per_amount`; optional. |
+| `saturated_fat` | `float` | No | Saturated fat grams; optional. |
+| `unsaturated_fat` | `float` | No | Unsaturated fat grams; optional. |
 
 #### CorpusSnapshot
 
