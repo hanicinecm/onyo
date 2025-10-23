@@ -4,12 +4,7 @@ Consumers should prefer :func:`get_config` for retrieving the cached configurati
 object and :func:`reload_config` when changes on disk need to be applied immediately.
 """
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from pathlib import Path
 
 from .loader import (
     default_config_path,

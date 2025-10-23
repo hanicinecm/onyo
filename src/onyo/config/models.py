@@ -8,12 +8,10 @@ settings.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+from typing import Any, ClassVar
 
 
 class ConfigurationError(ValueError):

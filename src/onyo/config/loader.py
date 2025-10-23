@@ -6,8 +6,6 @@ starter template when it is missing, parsing the file into a strongly typed
 reload flows.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any
 

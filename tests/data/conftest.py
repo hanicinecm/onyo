@@ -6,8 +6,6 @@ an isolated copy of that corpus inside the pytest temporary directory, ensuring
 tests operate on writeable copies while leaving the fixtures pristine.
 """
 
-from __future__ import annotations
-
 import shutil
 from pathlib import Path
 

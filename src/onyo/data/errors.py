@@ -1,13 +1,8 @@
 """Shared error types and validation reporting utilities for the data layer."""
 
-from __future__ import annotations
-
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Sequence
 
 
 class ValidationLevel(str, Enum):

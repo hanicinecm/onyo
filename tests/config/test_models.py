@@ -2,14 +2,9 @@
 
 """Unit tests for :mod:`onyo.config.models`."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import pytest
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 from onyo.config.models import (
     Configuration,
