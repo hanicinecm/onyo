@@ -14,10 +14,10 @@
 
 ## Tasks
 
-- [ ] 1 Establish synthetic corpus fixtures and shared testing utilities.
+- [x] 1 Establish synthetic corpus fixtures and shared testing utilities.
   - [x] 1.1 Create `tests/data/resources/ingredients` and `tests/data/resources/recipes` directories with representative YAML samples (valid cases, missing fields, duplicate names).
-  - [ ] 1.2 Add a `tests/data/conftest.py` fixture that copies the sample corpus into a temporary directory to support mutation-free tests.
-  - [ ] 1.3 Document fixture usage patterns within `tests/data/conftest.py` to guide future contributors.
+  - [x] 1.2 Add a `tests/data/conftest.py` fixture that copies the sample corpus into a temporary directory to support mutation-free tests.
+  - [x] 1.3 Document fixture usage patterns within `tests/data/conftest.py` to guide future contributors.
 - [ ] 2 Implement domain models alongside focused unit tests.
   - [ ] 2.1 Introduce `src/onyo/data/models.py` with frozen dataclasses (or Pydantic models) for `Recipe`, `RecipeIngredient`, `Ingredient`, `NutritionProfile`, and `CorpusSnapshot`.
   - [ ] 2.2 Add `Recipe` invariants: enforce unique recipe names, immutable ingredient tuples, and reference tracking for ingredient usage.
