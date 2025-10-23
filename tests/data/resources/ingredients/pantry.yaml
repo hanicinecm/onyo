@@ -1,0 +1,13 @@
+category: Pantry
+ingredients:
+  - name: Olive Oil
+    translations:
+      pl: Oliwa
+    nutrition:
+      unit: g
+      per_amount: 100
+      unsaturated_fat: 73.0
+      saturated_fat: 14.0
+  - name: Sea Salt
+    translations:
+      pl: Sól morska

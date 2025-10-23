@@ -1,0 +1,18 @@
+category: Vegetables
+ingredients:
+  - name: Carrot
+    translations:
+      pl: Marchew
+    nutrition:
+      unit: g
+      per_amount: 100
+      sugars: 4.7
+      protein: 0.9
+  - name: Onion
+    translations:
+      pl: Cebula
+    nutrition:
+      unit: g
+      per_amount: 100
+      sugars: 4.2
+      protein: 1.1

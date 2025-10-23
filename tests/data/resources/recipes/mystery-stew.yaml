@@ -1,0 +1,11 @@
+name: Mystery Stew
+portions: 2
+ingredients:
+  - ingredient: Dragonfruit
+    quantity: 1
+    unit: piece
+  - ingredient: Sea Salt
+    quantity: 1
+    unit: tsp
+method:
+  - Simmer all ingredients together until tender.

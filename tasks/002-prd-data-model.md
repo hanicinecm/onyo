@@ -2,16 +2,16 @@
 
 ## 1. Feature Overview
 
-The Data Model feature establishes the in-memory representation of the recipe corpus and the validation logic that keeps it trustworthy. It introduces typed models for recipes, their ingredient usage, and the shared ingredient catalog, providing a single source of truth for the rest of the application. The feature ensures the clear-text YAML repository can be loaded into Python objects with rigorous schema checks and actionable feedback when data issues arise.
+The Data Model feature establishes the in-memory representation of the recipe corpus and the validation logic that keeps it trustworthy. It introduces typed models for recipes, their ingredient usage, and the shared ingredient catalog, providing a single source of truth for the rest of the application. The feature ensures the clear-text YAML repository can be loaded into Python objects with rigorous model-based validation and actionable feedback when data issues arise.
 
-This work resolves the current gap between the external YAML corpus and the application runtime. Once complete, the NiceGUI UI, search layer, and future services will read from well-defined models that accurately mirror the corpus structure and relationships.
+This work resolves the current gap between the external YAML corpus and the rest of the codebase. Once complete, the NiceGUI UI, search layer, and future services will read from well-defined models that accurately mirror the corpus structure and relationships.
 
 ## 2. Goals & Non-Goals
 
-- Deliver immutable Python domain classes for `Recipe`, `RecipeIngredient`, and `Ingredient`, enforcing filename-safe naming rules.
-- Load the corpus from disk into those classes on application startup and manual refresh.
-- Validate recipe and ingredient YAML against hardcoded schemas, accumulating all errors per run.
-- Surface validation outcomes so users understand when data failed to load and why.
+- Deliver immutable Python domain classes for `Recipe`, `RecipeIngredient`, and `Ingredient`, ensuring recipe and ingredient names remain unique within the corpus.
+- Provide code that loads the corpus from disk into those classes so future runtime entry points can call it during startup or manual refresh moments.
+- Validate recipe and ingredient YAML by instantiating the data models directly, accumulating all errors per run without relying on external schema definitions.
+- Surface validation outcomes through structured reports so downstream consumers understand when data failed to load and why.
 - Prepare the models for downstream consumers (search, UI) without locking in those implementations.
 
 Non-goals:
@@ -22,13 +22,13 @@ Non-goals:
 
 ## 3. User Impact & Flows
 
-- **Corpus load on startup/refresh**: When the app boots or a manual reload is triggered, it validates the corpus, instantiates all models, and exposes them for search and display. Failures are reported in logs and through a user-facing alert banner, while successfully parsed data remains available.
-- **Invalid recipe visibility**: If a recipe file fails validation, the user sees a notification summarizing the issues and the recipe is excluded from the active catalog until fixed.
+- **Corpus load on startup/refresh**: When the loader is invoked (e.g., during future app startup or a manual reload), it validates the corpus, instantiates all models, and exposes them for search and display. Failures are recorded in logs and surfaced through the validation report, while successfully parsed data remains available.
+- **Invalid recipe visibility**: If a recipe file fails validation, the loader records a diagnostic summarizing the issues and excludes the recipe from the active catalog until fixed, enabling downstream layers to inform the user.
 
 Acceptance criteria:
 
 - Given a valid corpus, all recipes and ingredients load into memory within two seconds on target hardware.
-- Given schema violations, the loader reports every issue discovered in that run and identifies the affected files.
+- Given validation errors, the loader reports every issue discovered in that run and identifies the affected files.
 - Given a recipe referencing an ingredient absent from the catalog, the loader represents it as an ad-hoc ingredient with name only, without raising a validation failure.
 - Given ingredient catalog entries, the loader attaches optional translations and nutrition data to recipes that reference them.
 
@@ -39,9 +39,10 @@ Acceptance criteria:
 - Define Python models:
   - `Recipe`: name, portions, optional description, ordered `RecipeIngredient` list, optional mise en place steps, optional method steps, and metadata (e.g., source path, timestamps).
   - `RecipeIngredient`: resolved `Ingredient` instance for the primary ingredient, quantity amount (numeric value plus required unit drawn from a constrained enum), and optional substitutes collection.
-  - `Ingredient`: name, optional category (folder-derived when present), optional translations (mapping language code→string), optional nutrition info (per-unit metrics for sugar, protein, saturated fat, unsaturated fat), and metadata (source path when sourced from catalog, unit basis).
-- Guarantee recipe and ingredient names are unique, human-readable, and remain valid YAML filenames; reject conflicts or unsafe names during validation.
+  - `Ingredient`: name, optional category (read from catalog file header when present), optional translations (mapping language code→string), optional nutrition info (per-unit metrics for sugar, protein, saturated fat, unsaturated fat), and metadata (source path when sourced from catalog, unit basis).
+- Guarantee recipe and ingredient names are unique and human-readable without imposing filename-safety constraints; reject duplicate names during validation.
 - Parse the filesystem structure rooted at the configured corpus path with `recipes/` and `ingredients/` subdirectories.
+- Treat YAML filenames as diagnostic metadata only; rely on the unique `name` fields and the recorded `source_path` for identification.
 - Instantiate models by reading each YAML file, supporting multiple ingredients per ingredient file.
 - When a recipe references an ingredient name that exists in the catalog, attach the enriched `Ingredient` instance; otherwise create an ephemeral `Ingredient` with name only.
 - Maintain relationships: recipes expose their ingredients, ingredients track the recipes that reference them (reverse index).
@@ -53,7 +54,7 @@ Acceptance criteria:
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `name` | `str` | Yes | Display name shown in UI; must also be a filesystem-safe filename. |
+| `name` | `str` | Yes | Display name shown in UI; must be unique across the corpus. |
 | `description` | `str` | No | Optional summary text for listings. |
 | `portions` | `int` | Yes | Number of servings for scaling and nutrition displays. |
 | `ingredients` | `tuple[RecipeIngredient, ...]` | Yes | Ordered as declared in YAML. |
@@ -75,8 +76,8 @@ Acceptance criteria:
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `name` | `str` | Yes | Display name; must be usable as a YAML filename. |
-| `category` | `str` | No | Derived from catalog file grouping when present. |
+| `name` | `str` | Yes | Display name; must be unique across the corpus. |
+| `category` | `str` | No | Read from catalog file header; falls back to filename-derived grouping when absent. |
 | `translations` | `dict[str, str]` | No | Language code keyed translations (`"pl": "łosoś"`). |
 | `nutrition` | `NutritionProfile` | No | Per-unit macros with declared basis. |
 | `source_path` | `Path` | No | Present for catalog-managed ingredients; absent for ad-hoc ones. |
@@ -111,32 +112,29 @@ Acceptance criteria:
 
 ### Data & Schema Changes
 
-- Author YAML schemas (using Yamale or PyYAML-based validation) for:
-  - Recipe files: enforce required `name` matching the YAML filename, required numeric `portions`, `ingredients` array with amount + unit + ingredient name, optional `mise_en_place` step list, optional `method` step list.
-  - Ingredient files: enforce per-file list structure with `name`, optional `category`, optional `translations` map, optional `nutrition` block with numeric macros and declared unit basis.
-- Schemas live in code and version alongside the loader; updates require explicit migration notes.
-- Store the ingredient category derived from the source file path (e.g., `ingredients/Fish and Meat.yaml` → `"Fish and Meat"`).
-- Provide migration guidance for legacy files (e.g., filenames not matching `name`) within the validation report.
+- Keep recipes in one-file-per-recipe YAML documents and ingredient catalogs in one-file-per-category YAML documents.
+- Ingredient catalog files begin with an explicit `category` field and then list ingredient entries; when the field is absent, fall back to deriving the category from the filename for backward compatibility.
+- Rely on the data models to validate structure and values; no external YAML schema definitions are required.
+- Provide migration guidance for legacy files (e.g., missing category headers or duplicate names) within the validation report.
 
 ## 5. Experience Notes
 
-- In the web UI, display a persistent, dismissible banner summarizing validation problems (e.g., “3 recipes skipped due to schema errors — view details”). Link to a modal or log location that lists each issue.
-- When showing diagnostics, reference the recipe or ingredient name along with its filename to help users locate issues quickly.
+- Expose validation summaries in a structured report so future UI or tooling can surface issues (e.g., “3 recipes skipped due to validation errors” with detail references).
+- Include the recipe or ingredient name together with its source path in every diagnostic entry to help maintainers locate issues quickly.
 - Favor error messages that point to exact YAML keys and propose fixes (e.g., “ingredients[2].amount.unit must be one of g, kg, ml, l, tbsp, tsp”).
 
 ## 6. Technical Design
 
 - **Architecture**: Introduce a `data` package (`src/onyo/data/`) with:
   - `models.py`: frozen `@dataclass` or `pydantic` models for Recipe, RecipeIngredient, Ingredient, CorpusSnapshot.
-  - `naming.py`: utilities to validate and sanitize names for filesystem use without altering their display form.
-  - `schemas/`: YAML schema definitions loaded at runtime for validation.
-  - `loader.py`: orchestrates filesystem traversal, schema validation, model instantiation, and report generation.
-  - `errors.py`: domain exceptions (e.g., `SchemaValidationError`, `NameCollisionError`).
-- **Name safety strategy**: ensure every recipe and ingredient name converts to a safe filename, detect conflicts early, and store the original name for display.
+  - `naming.py`: utilities to enforce uniqueness rules and derive helpful slugs without mutating display names.
+  - `loader.py`: orchestrates filesystem traversal, model instantiation, and report generation.
+  - `errors.py`: domain exceptions (e.g., `ValidationError`, `NameCollisionError`).
+- **Name strategy**: detect duplicates early, provide colliding source paths in the validation report, and preserve original display names.
 - **Validation pipeline**:
-  1. Walk `ingredients/`, validate each file against the ingredient schema, and build ingredient objects with category from folder/file metadata.
-  2. Walk `recipes/`, validate against recipe schema, ensure ingredient names resolve to catalog entries or create ephemeral placeholders, and instantiate recipes.
-  3. Collect all validation errors in a `ValidationReport` containing items (level, file, field, message).
+  1. Walk `ingredients/`, parse YAML into dictionaries, instantiate models, and capture model-creation errors while recording the category from file headers or filename fallback.
+  2. Walk `recipes/`, instantiate models, ensure ingredient names resolve to catalog entries or create ephemeral placeholders, and attach any instantiation errors to the report.
+  3. Collect all model and relationship validation errors in a `ValidationReport` containing items (level, file, field, message).
   4. Build reverse indices: ingredient name → recipes referencing it, recipe name → file path.
   5. If fatal errors exist, retain prior `CorpusSnapshot` and surface report; otherwise replace active snapshot.
 - **Integration points**:
@@ -147,14 +145,14 @@ Acceptance criteria:
 
 ## 7. Testing Strategy
 
-- Unit tests for naming utilities covering filename-safety checks, collisions, and Unicode fold-down behavior.
-- Schema validation tests using fixture YAML files:
+- Unit tests for naming utilities covering duplicate detection, slug derivation (when needed), and Unicode normalization behavior.
+- Model validation tests using fixture YAML files:
   - Valid recipe/ingredient fixtures.
-  - Failing scenarios (missing name, invalid units, name/filename mismatches) that assert all errors are reported.
+  - Failing scenarios (missing name, invalid units, duplicate names) that assert all errors are reported.
 - Loader integration tests that construct temporary corpus directories and confirm:
   - Successful snapshot creation with correct counts and relationships.
   - Ephemeral ingredient creation when catalog entries are absent.
   - Reverse indices accurately list referencing recipes.
   - Previous snapshot remains active when validation fails.
 - Performance smoke test measuring validation time against a synthetic corpus (skipped in CI but documented for manual verification).
-- UI-facing tests (or component tests) asserting that validation banners appear when the loader exposes errors.
+- Contract tests (or component tests) that assert the validation report exposes message counts and per-file details needed by future UI layers.

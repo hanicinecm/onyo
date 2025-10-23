@@ -1,0 +1,22 @@
+name: Roasted Carrot Soup
+description: Simple roasted carrot soup for chilly evenings.
+portions: 4
+ingredients:
+  - ingredient: Carrot
+    quantity: 800
+    unit: g
+  - ingredient: Onion
+    quantity: 1
+    unit: piece
+  - ingredient: Olive Oil
+    quantity: 2
+    unit: tbsp
+mise_en_place:
+  - Peel and chop the vegetables.
+  - Preheat the oven to 200C.
+method:
+  - Roast the carrots and onions until caramelised.
+  - Blend with stock and season.
+metadata:
+  tags:
+    - soup
