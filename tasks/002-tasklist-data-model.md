@@ -19,7 +19,7 @@
   - [x] 1.2 Add a `tests/data/conftest.py` fixture that copies the sample corpus into a temporary directory to support mutation-free tests.
   - [x] 1.3 Document fixture usage patterns within `tests/data/conftest.py` to guide future contributors.
 - [ ] 2 Implement domain models alongside focused unit tests.
-  - [ ] 2.1 Introduce `src/onyo/data/models.py` with Pydantic models for `Recipe`, `RecipeIngredient`, `Ingredient`, `NutritionProfile`, and `CorpusSnapshot`.
+  - [x] 2.1 Introduce `src/onyo/data/models.py` with Pydantic models for `Recipe`, `RecipeIngredient`, `Ingredient`, `NutritionProfile`, and `CorpusSnapshot`.
   - [ ] 2.2 Implement all the custom validation for the model classes.
   - [ ] 2.3 Write unit tests in `tests/data/test_models.py` verifying model construction, optional fields, error handling on duplicates, and immutability guarantees.
 - [ ] 3 Build name-handling and validation-report utilities with corresponding tests.

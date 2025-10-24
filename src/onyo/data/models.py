@@ -1,12 +1,14 @@
 """Immutable domain models representing the recipe corpus."""
 
 from collections.abc import Mapping
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
-from pydantic import AfterValidator, BaseModel, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
+from onyo.data.errors import ValidationReport
 from onyo.data.validators import freeze_mapping
 
 
@@ -29,7 +31,13 @@ class LanguageCode(str, Enum):
     CZ = "cz"
 
 
-class NutritionProfile(BaseModel, frozen=True):
+class FrozenStrictModel(BaseModel):
+    """Base model enforcing immutability and strict field validation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, str_strip_whitespace=True)
+
+
+class NutritionProfile(FrozenStrictModel):
     """Per-unit nutritional snapshot for an ingredient.
 
     Describes the nutritional content *in grams* per amount of the specified unit.
@@ -49,8 +57,15 @@ class NutritionProfile(BaseModel, frozen=True):
     unsaturated_fat: Annotated[float | None, Field(gt=0)] = None
 
 
-class Ingredient(BaseModel, frozen=True):
-    """An ingredient used in recipes."""
+class Ingredient(FrozenStrictModel):
+    """Catalog entry describing a single ingredient.
+
+    When loaded from the catalog, contains the source file path and might include
+    optional category, name translations and per-unit nutrition information.
+
+    If instantiated as an ephemeral ingredient (not present in the catalog), only
+    the name field will be populated.
+    """
 
     # Required fields
     name: Annotated[str, Field(min_length=1)]
@@ -64,3 +79,60 @@ class Ingredient(BaseModel, frozen=True):
     ] = None
     nutrition: NutritionProfile | None = None
     source_path: Path | None = None
+
+
+class RecipeIngredient(FrozenStrictModel):
+    """A resolved ingredient reference within a recipe.
+
+    Stores the ingredient instance, the quantity and unit used in the recipe,
+    and an optional non-empty set of possible substitute ingredients.
+    """
+
+    # Required fields
+    ingredient: Ingredient
+    quantity: Annotated[float, Field(gt=0)]
+    unit: QuantityUnit
+
+    # Optional fields
+    substitutes: Annotated[tuple[Ingredient, ...] | None, Field(min_length=1)] = None
+
+
+class Recipe(FrozenStrictModel):
+    """Primary recipe model assembled from corpus YAML files.
+
+    Includes the immutable ingredient list, number of cooking portions, and the source
+    file path.
+
+    Optionally includes description, mise en place and method steps, and arbitrary
+    metadata.
+    """
+
+    # Required fields
+    name: Annotated[str, Field(min_length=1)]
+    portions: Annotated[int, Field(gt=0)]
+    ingredients: tuple[RecipeIngredient, ...]
+    source_path: Path
+
+    # Optional fields
+    description: Annotated[str | None, Field(min_length=1)] = None
+    mise_en_place: Annotated[tuple[str, ...] | None, Field(min_length=1)] = None
+    method: Annotated[tuple[str, ...] | None, Field(min_length=1)] = None
+    metadata: Annotated[
+        Mapping[str, Any] | None,
+        Field(min_length=1),
+        AfterValidator(freeze_mapping),
+    ] = None
+
+
+class CorpusSnapshot(FrozenStrictModel):
+    """Immutable aggregation of recipes, ingredients, and validation diagnostics.
+
+    Represents the outcome of a corpus load, keeping the resolved ingredient and
+    recipe mappings keyed by their names, the validation report emitted during the
+    load, and the timestamp recording when the snapshot was generated.
+    """
+
+    recipes: Annotated[Mapping[str, Recipe], AfterValidator(freeze_mapping)]
+    ingredients: Annotated[Mapping[str, Ingredient], AfterValidator(freeze_mapping)]
+    validation_report: ValidationReport
+    generated_at: datetime

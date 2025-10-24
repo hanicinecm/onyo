@@ -1,19 +1,19 @@
 """Data layer primitives for the onyo application."""
 
 from .models import (
-    # CorpusSnapshot,
+    CorpusSnapshot,
     Ingredient,
     NutritionProfile,
     QuantityUnit,
-    # Recipe,
-    # RecipeIngredient,
+    Recipe,
+    RecipeIngredient,
 )
 
 __all__ = [
-    # "CorpusSnapshot",
+    "CorpusSnapshot",
     "Ingredient",
     "NutritionProfile",
     "QuantityUnit",
-    # "Recipe",
-    # "RecipeIngredient",
+    "Recipe",
+    "RecipeIngredient",
 ]
