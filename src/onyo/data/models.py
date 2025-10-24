@@ -34,7 +34,12 @@ class LanguageCode(str, Enum):
 class FrozenStrictModel(BaseModel):
     """Base model enforcing immutability and strict field validation."""
 
-    model_config = ConfigDict(extra="forbid", frozen=True, str_strip_whitespace=True)
+    model_config = ConfigDict(
+        extra="forbid",
+        frozen=True,
+        str_strip_whitespace=True,
+        arbitrary_types_allowed=True,
+    )
 
 
 class NutritionProfile(FrozenStrictModel):

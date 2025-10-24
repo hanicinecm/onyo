@@ -24,6 +24,7 @@ from onyo.config.models import (
 def test_default_config_path_points_to_home(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    """Resolve the default config path relative to the user home directory."""
     fake_home = tmp_path / "home"
     monkeypatch.setattr(Path, "home", lambda: fake_home)
 
@@ -32,6 +33,7 @@ def test_default_config_path_points_to_home(
 
 
 def test_load_configuration_bootstraps_missing_file(tmp_path: Path) -> None:
+    """Materialise a template config file when the target is missing."""
     config_path = tmp_path / "onyo-config.yaml"
 
     with pytest.raises(ConfigurationFileMissingError, match="template was created"):
@@ -44,6 +46,7 @@ def test_load_configuration_bootstraps_missing_file(tmp_path: Path) -> None:
 
 
 def test_load_configuration_round_trip(tmp_path: Path) -> None:
+    """Load configuration from disk and return parsed objects."""
     repo_path = tmp_path / "recipes"
     repo_path.mkdir()
     config_path = tmp_path / "onyo-config.yaml"
@@ -55,6 +58,7 @@ def test_load_configuration_round_trip(tmp_path: Path) -> None:
 
 
 def test_load_configuration_path_validation(tmp_path: Path) -> None:
+    """Reject configurations pointing to non-existent directories."""
     missing_path = tmp_path / "missing"
     config_path = tmp_path / "onyo-config.yaml"
     config_path.write_text(f"recipe_repo_path: {missing_path}\n", encoding="utf-8")
@@ -64,6 +68,7 @@ def test_load_configuration_path_validation(tmp_path: Path) -> None:
 
 
 def test_load_configuration_requires_mapping(tmp_path: Path) -> None:
+    """Reject configuration files that do not contain mappings."""
     config_path = tmp_path / "onyo-config.yaml"
     config_path.write_text("- item\n- other\n", encoding="utf-8")
 
@@ -72,6 +77,7 @@ def test_load_configuration_requires_mapping(tmp_path: Path) -> None:
 
 
 def test_get_configuration_caches_result(tmp_path: Path) -> None:
+    """Cache configuration objects between invocations."""
     repo_path = tmp_path / "recipes"
     repo_path.mkdir()
     config_path = tmp_path / "onyo-config.yaml"
@@ -84,6 +90,7 @@ def test_get_configuration_caches_result(tmp_path: Path) -> None:
 
 
 def test_reload_configuration_refreshes_cache(tmp_path: Path) -> None:
+    """Refresh cached configuration instances when reloading."""
     repo_path = tmp_path / "recipes"
     repo_path.mkdir()
     config_path = tmp_path / "onyo-config.yaml"
@@ -105,6 +112,7 @@ def test_reload_configuration_refreshes_cache(tmp_path: Path) -> None:
 
 
 def test_load_configuration_rejects_non_directory_path(tmp_path: Path) -> None:
+    """Reject configuration paths pointing to files instead of directories."""
     file_path = tmp_path / "not_directory"
     file_path.write_text("content", encoding="utf-8")
     config_path = tmp_path / "onyo-config.yaml"
@@ -115,6 +123,7 @@ def test_load_configuration_rejects_non_directory_path(tmp_path: Path) -> None:
 
 
 def test_public_api_wrappers_delegates_to_loader(tmp_path: Path) -> None:
+    """Ensure public API functions delegate through the loader."""
     repo_path = tmp_path / "recipes"
     repo_path.mkdir()
     config_path = tmp_path / "onyo-config.yaml"
@@ -132,6 +141,7 @@ def test_public_api_wrappers_delegates_to_loader(tmp_path: Path) -> None:
 
 
 def test_render_template_includes_guidance() -> None:
+    """Embed usage guidance and placeholders in the config template."""
     template = render_template()
 
     assert "Replace placeholder values" in template
@@ -140,6 +150,7 @@ def test_render_template_includes_guidance() -> None:
 
 
 def test_load_configuration_with_invalid_yaml(tmp_path: Path) -> None:
+    """Raise a validation error when YAML cannot be parsed."""
     config_path = tmp_path / "onyo-config.yaml"
     config_path.write_text("recipe_repo_path: [unbalanced\n", encoding="utf-8")
 
