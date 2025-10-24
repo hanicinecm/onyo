@@ -6,13 +6,13 @@ object and :func:`reload_config` when changes on disk need to be applied immedia
 
 from pathlib import Path
 
-from .loader import (
+from onyo.config.loader import (
     default_config_path,
     get_configuration,
     load_configuration,
     reload_configuration,
 )
-from .models import Configuration
+from onyo.config.models import Configuration
 
 __all__ = [
     "Configuration",

@@ -1,6 +1,6 @@
 """Data layer primitives for the onyo application."""
 
-from .models import (
+from onyo.data.models import (
     CorpusSnapshot,
     Ingredient,
     NutritionProfile,

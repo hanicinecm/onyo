@@ -202,14 +202,3 @@ def _clear_cache() -> None:
     """Clear the in-memory configuration cache."""
     _CACHE["configuration"] = None
     _CACHE["path"] = None
-
-
-__all__ = [
-    "CONFIG_DIRNAME",
-    "CONFIG_FILENAME",
-    "default_config_path",
-    "get_configuration",
-    "load_configuration",
-    "reload_configuration",
-    "render_template",
-]
