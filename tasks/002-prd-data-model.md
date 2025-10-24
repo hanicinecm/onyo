@@ -27,7 +27,6 @@ Non-goals:
 
 Acceptance criteria:
 
-- Given a valid corpus, all recipes and ingredients load into memory within two seconds on target hardware.
 - Given validation errors, the loader reports every issue discovered in that run and identifies the affected files.
 - Given a recipe referencing an ingredient absent from the catalog, the loader represents it as an ad-hoc ingredient with name only, without raising a validation failure.
 - Given ingredient catalog entries, the loader attaches optional translations and nutrition data to recipes that reference them.
@@ -40,15 +39,15 @@ Acceptance criteria:
   - `Recipe`: name, portions, optional description, ordered `RecipeIngredient` list, optional mise en place steps, optional method steps, and metadata (e.g., source path, timestamps).
   - `RecipeIngredient`: resolved `Ingredient` instance for the primary ingredient, quantity amount (numeric value plus required unit drawn from a constrained enum), and optional substitutes collection.
   - `Ingredient`: name, optional category (read from catalog file header when present), optional translations (mapping language code→string), optional nutrition info (per-unit metrics for sugar, protein, saturated fat, unsaturated fat), and metadata (source path when sourced from catalog, unit basis).
-- Guarantee recipe and ingredient names are unique and human-readable without imposing filename-safety constraints; reject duplicate names during validation.
+- Guarantee recipe and ingredient names are unique and human-readable.
 - Parse the filesystem structure rooted at the configured corpus path with `recipes/` and `ingredients/` subdirectories.
 - Treat YAML filenames as diagnostic metadata only; rely on the unique `name` fields and the recorded `source_path` for identification.
 - Instantiate models by reading each YAML file, supporting multiple ingredients per ingredient file.
 - When a recipe references an ingredient name that exists in the catalog, attach the enriched `Ingredient` instance; otherwise create an ephemeral `Ingredient` with name only.
-- Maintain relationships: recipes expose their ingredients, ingredients track the recipes that reference them (reverse index).
+- Maintain relationships: recipes expose their ingredients, but ingredients do not track the recipes that reference them (reverse index) - this tracking is done on a higher level (Corpus Snapshot).
 - Provide a loader service that returns a cohesive data object (e.g., `CorpusSnapshot`) containing collections, lookup indices, and validation reports.
 
-### Data Model Detail
+### Data Model
 
 #### Recipe
 
@@ -78,21 +77,20 @@ Acceptance criteria:
 | --- | --- | --- | --- |
 | `name` | `str` | Yes | Display name; must be unique across the corpus. |
 | `category` | `str` | No | Read from catalog file header; falls back to filename-derived grouping when absent. |
-| `translations` | `dict[str, str]` | No | Language code keyed translations (`"pl": "łosoś"`). |
+| `translations` | `dict[LanguageCode, str]` | No | Language code (Enum) keyed translations (`"de": "lachs"`). |
 | `nutrition` | `NutritionProfile` | No | Per-unit macros with declared basis. |
 | `source_path` | `Path` | No | Present for catalog-managed ingredients; absent for ad-hoc ones. |
-| `recipes` | `tuple[str, ...]` | Yes | Names of recipes referencing this ingredient. |
 
 #### NutritionProfile
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `unit` | `QuantityUnit` | Yes | Base unit for macro values (e.g., `g`). |
-| `per_amount` | `float` | Yes | Amount associated with macro values (e.g., per 100g). |
+| `per_amount` | `float` | Yes | Amount associated with macro values (e.g., 100). |
 | `sugars` | `float` | No | Sugar grams per `per_amount`; optional. |
 | `protein` | `float` | No | Protein grams per `per_amount`; optional. |
-| `saturated_fat` | `float` | No | Saturated fat grams; optional. |
-| `unsaturated_fat` | `float` | No | Unsaturated fat grams; optional. |
+| `saturated_fat` | `float` | No | Saturated fat grams per `per_amount`; optional. |
+| `unsaturated_fat` | `float` | No | Unsaturated fat grams per `per_amount`; optional. |
 
 #### CorpusSnapshot
 
@@ -105,17 +103,24 @@ Acceptance criteria:
 
 ### Non-Functional
 
-- Validation runs must complete within two seconds for 500 recipes and 200 ingredient entries on Raspberry Pi-class hardware.
 - Data models are immutable after instantiation to prevent accidental runtime drift; mutations require reloading from disk.
 - Validation must collect all issues per run and never leave the system in a partially updated state—either the previous snapshot remains active or the new snapshot replaces it atomically.
-- Errors and warnings are logged with structured context (file path, field, message) and exposed to the UI via an observable status component.
+- Errors and warnings are logged with structured context (file path, field, message), ready to be exposed to the UI via an observable status component.
 
 ### Data & Schema Changes
 
 - Keep recipes in one-file-per-recipe YAML documents and ingredient catalogs in one-file-per-category YAML documents.
-- Ingredient catalog files begin with an explicit `category` field and then list ingredient entries; when the field is absent, fall back to deriving the category from the filename for backward compatibility.
+- Ingredient catalog files begin with an explicit `category` field and then list ingredient entries.
 - Rely on the data models to validate structure and values; no external YAML schema definitions are required.
-- Provide migration guidance for legacy files (e.g., missing category headers or duplicate names) within the validation report.
+
+### Data Validation
+
+- On the corpus update, a validation report is constructed, recording issues in several severity tiers.
+- Validation is performed directly by instantiation of the raw data from yaml as the data classes (implemented as `pydantic` models). Any errors during instantiation will be recorded and the ingredients/recipes in question will be rejected from the corpus.
+- Duplicate ingredient/recipes names in the catalgs should result in a warning and ignoring of any other than the firstly encountered ingredient per name.
+- If an Ingredient has nutritional profile attached to it and its unit does not match the unit of any of it's parent `RecipeIngredients`, a warning should be raised (but nothing is ignored).
+- Ingredients from the catalogs which do not feature in any of the recipes should be flagged as redundant with a warning.
+- Low-level constraints, such as positivity of the numerical values, etc., will be ensured by field constraints.
 
 ## 5. Experience Notes
 
@@ -126,23 +131,22 @@ Acceptance criteria:
 ## 6. Technical Design
 
 - **Architecture**: Introduce a `data` package (`src/onyo/data/`) with:
-  - `models.py`: frozen `@dataclass` or `pydantic` models for Recipe, RecipeIngredient, Ingredient, CorpusSnapshot.
-  - `naming.py`: utilities to enforce uniqueness rules and derive helpful slugs without mutating display names.
+  - `models.py`: `pydantic` models for Recipe, RecipeIngredient, Ingredient, CorpusSnapshot, ...
+  - `validators.py`: custom `pydantic` validators for validation rules which cannot be coverred by simple field constraints.
   - `loader.py`: orchestrates filesystem traversal, model instantiation, and report generation.
-  - `errors.py`: domain exceptions (e.g., `ValidationError`, `NameCollisionError`).
-- **Name strategy**: detect duplicates early, provide colliding source paths in the validation report, and preserve original display names.
+  - `errors.py`: domain exceptions (e.g., `ValidationError`, `NameCollisionError`), together with the report data structure.
 - **Validation pipeline**:
-  1. Walk `ingredients/`, parse YAML into dictionaries, instantiate models, and capture model-creation errors while recording the category from file headers or filename fallback.
+  1. Walk `ingredients/`, parse YAML into dictionaries, instantiate models, and capture model-creation errors. Store in the Corpus Snapshot under their unique names.
   2. Walk `recipes/`, instantiate models, ensure ingredient names resolve to catalog entries or create ephemeral placeholders, and attach any instantiation errors to the report.
-  3. If a recipe references and ingredient which has nutrition info, it needs to use the same unit as the recipe, otherwise the nutritions will be scrapped from the ingredient and error will be logged.
+  3. If a recipe references and ingredient which has nutrition info, it needs to use the same unit as the recipe, otherwise warning is logged (the nutritional info is, however, left there, since another recipe might use the ingredient with the correct unit - this will be up to the frontend to resolve in the future).
   4. Collect all model and relationship validation errors in a `ValidationReport` containing items (level, file, field, message).
-  5. Build reverse indices: ingredient name → recipes referencing it, recipe name → file path.
+  5. Build reverse indices: ingredient name → recipes referencing it.
   6. If fatal errors exist, retain prior `CorpusSnapshot` and surface report; otherwise replace active snapshot.
 - **Integration points**:
   - Expose a `DataStore` or dependency-injected service that provides read-only access to the current snapshot for UI and search layers.
-  - Emit events or signals when new snapshots are activated so observers can refresh state.
 - **Concurrency**: guard reloads with a lock to prevent overlapping filesystem reads.
 - **Extensibility**: design quantity units as an enum with explicit conversion metadata to support future normalization (e.g., grams ↔ kilograms).
+- **Data Structures**: The data are represented by `pydantic` models, following `v2` API. What can be validated with field constraints is done so, more custom validators are implemented as stand-alone functions and passed into `Annotated` attribute types.
 
 ## 7. Testing Strategy
 

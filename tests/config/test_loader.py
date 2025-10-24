@@ -1,5 +1,3 @@
-# ruff: noqa: D103, S101
-
 """Integration-style tests for :mod:`onyo.config.loader`."""
 
 from pathlib import Path

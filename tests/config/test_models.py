@@ -1,5 +1,3 @@
-# ruff: noqa: D103, S101, SLF001
-
 """Unit tests for :mod:`onyo.config.models`."""
 
 from pathlib import Path
