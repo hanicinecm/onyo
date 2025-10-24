@@ -9,7 +9,7 @@ from typing import Annotated, Any
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from onyo.data.errors import ValidationReport
-from onyo.data.validators import freeze_mapping
+from onyo.data.validators import freeze_mapping, resolve_path
 
 
 class QuantityUnit(str, Enum):
@@ -78,7 +78,7 @@ class Ingredient(FrozenStrictModel):
         AfterValidator(freeze_mapping),
     ] = None
     nutrition: NutritionProfile | None = None
-    source_path: Path | None = None
+    source_path: Annotated[Path | None, AfterValidator(resolve_path)] = None
 
 
 class RecipeIngredient(FrozenStrictModel):
@@ -110,8 +110,8 @@ class Recipe(FrozenStrictModel):
     # Required fields
     name: Annotated[str, Field(min_length=1)]
     portions: Annotated[int, Field(gt=0)]
-    ingredients: tuple[RecipeIngredient, ...]
-    source_path: Path
+    ingredients: Annotated[tuple[RecipeIngredient, ...], Field(min_length=1)]
+    source_path: Annotated[Path, AfterValidator(resolve_path)]
 
     # Optional fields
     description: Annotated[str | None, Field(min_length=1)] = None
