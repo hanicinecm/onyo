@@ -11,7 +11,7 @@ from typing import Any
 
 import yaml
 
-from .models import (
+from onyo.config.models import (
     Configuration,
     ConfigurationFileMissingError,
     InvalidConfigurationError,
