@@ -72,7 +72,7 @@ Keep the repository formatted, linted, and all tests passing.
 - Prefer pytest fixtures and organize shared fixtures in `conftest.py` modules.
 - Parametrize tests where it improves coverage.
 - When asserting errors, use the `match` parameter of the `pytest.raises` context
-  manager.
+  manager, instead of looking for patterns in the captured exception info.
 - Structure tests Arrange → Act → Assert and cover edge cases and regressions.
 - Keep coverage high on code you touch; add tests when behavior shifts, unless
   instructed otherwise.
